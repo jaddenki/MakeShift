@@ -13,8 +13,6 @@ npm install   # downloads all the dependencies listed in package.json
 npm run dev   # starts the local dev server at http://localhost:3000
 ```
 
-Any file you save will instantly reload in the browser!! No need to reload.
-
 ---
 
 ## Scripts
