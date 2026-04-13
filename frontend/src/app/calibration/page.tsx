@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FilesetResolver, HandLandmarker } from "@mediapipe/tasks-vision";
+import { useCamera } from "../CameraContext";
 
 // ─── Progress bar configuration ───────────────────────────────────────────────
 const TOTAL_STEPS = 5;
@@ -142,7 +143,6 @@ function ProgressBar({ total, current }: { total: number; current: number }) {
 
 export default function Calibration() {
   const [metronome, setMetronome] = useState(true);
-  const [cameraReady, setCameraReady] = useState(false);
   const [isCalibrated, setIsCalibrated] = useState(false);
   const [fingersShown, setFingersShown] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -151,6 +151,13 @@ export default function Calibration() {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { stream, cameraReady } = useCamera();
+
+  useEffect(() => {
+    if (stream && videoRef.current) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream]);
 
   useEffect(() => {
     // Check localStorage asynchronously to appease the strict linter rule
@@ -164,30 +171,9 @@ export default function Calibration() {
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
 
-    let stream: MediaStream | null = null;
-
-    navigator.mediaDevices
-      .getUserMedia({
-        video: {
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-          aspectRatio: 16 / 9,
-        },
-        audio: false,
-      })
-      .then((s) => {
-        stream = s;
-        if (videoRef.current) {
-          videoRef.current.srcObject = s;
-        }
-        setCameraReady(true);
-      })
-      .catch(() => {});
-
     return () => {
       clearTimeout(timer);
       window.removeEventListener("beforeunload", handleBeforeUnload);
-      stream?.getTracks().forEach((t) => t.stop());
     };
   }, []);
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useCamera } from "./CameraContext";
 
 function ChevronDown() {
   return (
@@ -55,9 +56,15 @@ function StopIcon() {
 
 export default function Home() {
   const [metronome, setMetronome] = useState(true);
-  const [cameraReady, setCameraReady] = useState(false);
   const [isCalibrated, setIsCalibrated] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const { stream, cameraReady } = useCamera();
+
+  useEffect(() => {
+    if (stream && videoRef.current) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream]);
 
   useEffect(() => {
     // Check localStorage asynchronously to appease the strict linter rule
@@ -71,31 +78,9 @@ export default function Home() {
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
 
-    let stream: MediaStream | null = null;
-
-    navigator.mediaDevices
-      .getUserMedia({
-        video: {
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-          aspectRatio: 16 / 9,
-        },
-        audio: false,
-      })
-      .then((s) => {
-        stream = s;
-        if (videoRef.current) {
-          videoRef.current.srcObject = s;
-        }
-        setCameraReady(true);
-      })
-      .catch(() => {});
-
     return () => {
-      // Clean up the timer, event listener, and camera stream
       clearTimeout(timer);
       window.removeEventListener("beforeunload", handleBeforeUnload);
-      stream?.getTracks().forEach((t) => t.stop());
     };
   }, []);
 
