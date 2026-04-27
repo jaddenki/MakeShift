@@ -13,7 +13,7 @@ const NOTE_OPTIONS = ["A0", "C1", "C2", "C3", "C4", "C5"];
 
 function ChevronDown() {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
@@ -21,7 +21,7 @@ function ChevronDown() {
 
 function AlertTriangle() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M12 4L22 20H2L12 4Z" stroke="white" strokeWidth="2" strokeLinejoin="round" />
       <line x1="12" y1="11" x2="12" y2="16" stroke="white" strokeWidth="2" strokeLinecap="round" />
       <circle cx="12" cy="18.5" r="1" fill="white" />
@@ -31,7 +31,7 @@ function AlertTriangle() {
 
 function CheckCircle() {
   return (
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg aria-hidden="true" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="16" cy="16" r="14.5" stroke="white" strokeWidth="2" />
       <path d="M9 16L13.5 21L23 11" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
@@ -40,7 +40,7 @@ function CheckCircle() {
 
 function ProgressBar({ total, current }: { total: number; current: number }) {
   return (
-    <div className="flex flex-1 items-center">
+    <div className="flex flex-1 items-center" role="progressbar" aria-valuenow={current} aria-valuemin={1} aria-valuemax={total} aria-label={`Step ${current} of ${total}`}>
       {Array.from({ length: total }, (_, i) => {
         const stepNum = i + 1;
         const circleFilled = stepNum <= current;
@@ -48,12 +48,12 @@ function ProgressBar({ total, current }: { total: number; current: number }) {
         return (
           <div key={i} className="flex flex-1 items-center last:flex-none">
             <div
-              className={`shrink-0 size-[20px] rounded-full border-2 ${
+              className={`shrink-0 size-[20px] rounded-full border-2 transition-colors duration-200 ${
                 circleFilled ? "bg-[#b46eff] border-[#b46eff]" : "bg-[#ded4cb] border-[#ded4cb]"
               }`}
             />
             {i < total - 1 && (
-              <div className={`flex-1 h-[10px] ${barFilled ? "bg-[#b46eff]" : "bg-[#ded4cb]"}`} />
+              <div className={`flex-1 h-[10px] transition-colors duration-200 ${barFilled ? "bg-[#b46eff]" : "bg-[#ded4cb]"}`} />
             )}
           </div>
         );
@@ -96,6 +96,16 @@ export default function Calibration() {
     setShowingImage(false);
     setStep5Success(false);
   }, [step]);
+
+  // Close help modal on Escape
+  useEffect(() => {
+    if (!showHelpModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowHelpModal(false);
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [showHelpModal]);
 
   function canvasToImage(canvas: HTMLCanvasElement): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
@@ -195,7 +205,6 @@ export default function Calibration() {
   // ── Camera overlays per step ──────────────────────────────────────────────
   const renderCameraOverlay = () => {
     if (isComplete) {
-      // Paper outline only (step 6 completion screen)
       return (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div
@@ -209,8 +218,7 @@ export default function Calibration() {
     if (step === 1) return null;
 
     if (step === 2) {
-      // Lighting warning overlay
-      const luxOk = true; // placeholder — would read from camera brightness
+      const luxOk = true;
       if (!luxOk) {
         return (
           <div className="absolute top-[30px] left-1/2 -translate-x-1/2 flex items-center gap-3 bg-black/50 px-4 py-2 rounded-full">
@@ -223,7 +231,6 @@ export default function Calibration() {
     }
 
     if (step === 3) {
-      // Paper outline with red corner dots
       return (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="relative pointer-events-none" style={{ width: "55%", height: "22%", transform: "skewX(-8deg)" }}>
@@ -237,10 +244,10 @@ export default function Calibration() {
               <div key={i} className="absolute w-3 h-3 rounded-full bg-[#e05c5c]" style={pos} />
             ))}
           </div>
-          {/* Help button */}
           <button
             onClick={() => setShowHelpModal(true)}
-            className="absolute bottom-4 right-4 w-10 h-10 bg-white rounded-[6px] flex items-center justify-center text-black text-[18px] font-bold shadow hover:bg-gray-100 transition-colors"
+            aria-label="Show help"
+            className="absolute bottom-4 right-4 w-10 h-10 bg-white rounded-[6px] flex items-center justify-center text-black text-[18px] font-bold shadow hover:bg-gray-100 active:scale-[0.97] transition-[background-color,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/20 focus-visible:ring-offset-1"
           >
             ?
           </button>
@@ -249,7 +256,6 @@ export default function Calibration() {
     }
 
     if (step === 4) {
-      const handsDetected = fingersShown;
       const handNotDetected = showingImage && !fingersShown;
       return (
         <>
@@ -257,7 +263,6 @@ export default function Calibration() {
           <div className="absolute flex items-center justify-center pointer-events-none" style={{ bottom: "18%", left: "10%", right: "10%" }}>
             <div className="relative w-full" style={{ height: 60, transform: "skewX(-8deg)" }}>
               <div className="absolute inset-0 border-2 border-[#e05c5c] bg-white/90" />
-              {/* Red fingertip dots on paper */}
               {[20, 28, 36, 44, 50, 58, 66, 72, 80, 88].map((pct, i) => (
                 <div
                   key={i}
@@ -294,10 +299,12 @@ export default function Calibration() {
           {/* Help button */}
           <button
             onClick={() => setShowHelpModal(true)}
-            className="absolute bottom-4 right-4 w-10 h-10 bg-white rounded-[6px] flex items-center justify-center text-black text-[18px] font-bold shadow hover:bg-gray-100 transition-colors"
+            aria-label="Show help"
+            className="absolute bottom-4 right-4 w-10 h-10 bg-white rounded-[6px] flex items-center justify-center text-black text-[18px] font-bold shadow hover:bg-gray-100 active:scale-[0.97] transition-[background-color,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/20 focus-visible:ring-offset-1"
           >
             ?
           </button>
+
         </>
       );
     }
@@ -341,7 +348,7 @@ export default function Calibration() {
                 <CheckCircle />
                 <span className="text-white text-[32px] font-sans">Success!</span>
               </div>
-              <p className="text-white text-[18px] font-sans">Click &apos;Next Step&apos; to Proceed</p>
+              <p className="text-white text-[18px] font-sans">Click &lsquo;Next Step&rsquo; to Proceed</p>
               <p className="text-white text-[15px] font-sans opacity-80">Click and drag the red dots to manually adjust if needed</p>
             </div>
           )}
@@ -349,7 +356,8 @@ export default function Calibration() {
           {/* Help button */}
           <button
             onClick={() => setShowHelpModal(true)}
-            className="absolute bottom-4 right-4 w-10 h-10 bg-white rounded-[6px] flex items-center justify-center text-black text-[18px] font-bold shadow hover:bg-gray-100 transition-colors"
+            aria-label="Show help"
+            className="absolute bottom-4 right-4 w-10 h-10 bg-white rounded-[6px] flex items-center justify-center text-black text-[18px] font-bold shadow hover:bg-gray-100 active:scale-[0.97] transition-[background-color,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/20 focus-visible:ring-offset-1"
           >
             ?
           </button>
@@ -366,24 +374,22 @@ export default function Calibration() {
     return (
       <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60">
         <div className="relative w-[88%] max-w-[680px] overflow-hidden rounded-[8px] shadow-2xl">
-          {/* Reference image */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/hand-reference.png"
             alt="Hand positioning reference"
+            width={680}
+            height={382}
             className="w-full block"
-            style={{ aspectRatio: "16/9", objectFit: "cover" }}
+            style={{ objectFit: "cover" }}
           />
-          {/* Caption bar */}
           <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-5 py-3 flex items-center justify-between">
             <p className="text-white text-[18px] font-sans">Position your hands on the paper like this</p>
-            {/* ? badge */}
-            <div className="w-8 h-8 bg-white rounded-[4px] flex items-center justify-center text-black text-[15px] font-bold">?</div>
+            <div aria-hidden="true" className="w-8 h-8 bg-white rounded-[4px] flex items-center justify-center text-black text-[15px] font-bold">?</div>
           </div>
-          {/* X close button */}
           <button
             onClick={() => setShowHelpModal(false)}
-            className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center text-white text-[22px] font-bold hover:opacity-70 transition-opacity leading-none"
+            className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center text-white text-[22px] font-bold hover:opacity-70 active:scale-[0.97] transition-[opacity,transform] leading-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
             aria-label="Close"
           >
             ×
@@ -411,12 +417,14 @@ export default function Calibration() {
           </p>
           <div className="flex items-end gap-4 shrink-0">
             <div className="flex flex-col gap-1">
-              <label className="text-[13px] text-black font-sans"># of Octaves</label>
+              <label htmlFor="octave-count" className="text-[13px] text-black font-sans"># of Octaves</label>
               <div className="relative">
                 <select
+                  id="octave-count"
+                  name="octaveCount"
                   value={octaves}
                   onChange={(e) => setOctaves(e.target.value)}
-                  className="border border-[#d9d9d9] rounded-[8px] pl-3 pr-8 py-2 text-[16px] text-[#1e1e1e] bg-white appearance-none outline-none cursor-pointer"
+                  className="border border-[#d9d9d9] rounded-[8px] pl-3 pr-8 py-2 text-[16px] text-[#1e1e1e] bg-white appearance-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/20 focus-visible:ring-offset-1"
                 >
                   {OCTAVE_OPTIONS.map((o) => <option key={o}>{o}</option>)}
                 </select>
@@ -424,12 +432,14 @@ export default function Calibration() {
               </div>
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-[13px] text-black font-sans">Starting Note</label>
+              <label htmlFor="starting-note" className="text-[13px] text-black font-sans">Starting Note</label>
               <div className="relative">
                 <select
+                  id="starting-note"
+                  name="startingNote"
                   value={startingNote}
                   onChange={(e) => setStartingNote(e.target.value)}
-                  className="border border-[#d9d9d9] rounded-[8px] pl-3 pr-8 py-2 text-[16px] text-[#1e1e1e] bg-white appearance-none outline-none cursor-pointer"
+                  className="border border-[#d9d9d9] rounded-[8px] pl-3 pr-8 py-2 text-[16px] text-[#1e1e1e] bg-white appearance-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/20 focus-visible:ring-offset-1"
                 >
                   {NOTE_OPTIONS.map((n) => <option key={n}>{n}</option>)}
                 </select>
@@ -463,7 +473,7 @@ export default function Calibration() {
           <p className="text-[26px] text-black font-sans">Step 4: Hover your hands above the paper for 3 seconds</p>
           <button
             onClick={handleStartCountdown}
-            className="shrink-0 border-[1.5px] border-black bg-[#fffdf7] px-5 py-2 rounded-[8px] text-[22px] text-black font-sans hover:bg-black/5 transition-colors"
+            className="shrink-0 border-[1.5px] border-black bg-[#fffdf7] px-5 py-2 rounded-[8px] text-[22px] text-black font-sans hover:bg-black/5 active:scale-[0.97] transition-[background-color,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/20 focus-visible:ring-offset-1"
           >
             {hasStarted ? "Restart" : "Start"}
           </button>
@@ -478,7 +488,7 @@ export default function Calibration() {
           {!step5Success && (
             <button
               onClick={handleStep5Start}
-              className="shrink-0 border-[1.5px] border-black bg-[#fffdf7] px-5 py-2 rounded-[8px] text-[22px] text-black font-sans hover:bg-black/5 transition-colors"
+              className="shrink-0 border-[1.5px] border-black bg-[#fffdf7] px-5 py-2 rounded-[8px] text-[22px] text-black font-sans hover:bg-black/5 active:scale-[0.97] transition-[background-color,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/20 focus-visible:ring-offset-1"
             >
               {hasStarted ? "Restart" : "Start"}
             </button>
@@ -491,11 +501,11 @@ export default function Calibration() {
   };
 
   return (
-    <div className="flex-1 bg-[#fffdf7] flex flex-col">
+    <div className="flex-1 bg-[#fffdf7] flex flex-col min-h-0 overflow-hidden">
       {/* Main area */}
-      <div className="flex pt-[115px] pl-[61px] pr-[47px]">
-        {/* Camera / overlay area — locked to 16:9 */}
-        <div className="flex-1 aspect-video bg-[#090909] relative overflow-hidden">
+      <div className="flex flex-1 min-h-0 pt-[clamp(20px,6dvh,115px)] pl-[clamp(20px,4.2vw,61px)] pr-[clamp(12px,3.2vw,47px)]">
+        {/* Camera / overlay area */}
+        <div className="flex-1 min-h-0 bg-[#090909] relative overflow-hidden">
           <video
             ref={videoRef}
             autoPlay
@@ -510,7 +520,7 @@ export default function Calibration() {
             className="absolute inset-0 w-full h-full object-cover"
           />
 
-          {/* Countdown overlay (full screen, steps 4) */}
+          {/* Countdown overlay (full screen, step 4) */}
           {step === 4 && countdown !== null && countdown > 0 && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-50">
               <span className="text-white text-[150px] font-bold drop-shadow-lg">{countdown}</span>
@@ -522,7 +532,7 @@ export default function Calibration() {
         </div>
 
         {/* Right sidebar — nav tabs only, no music controls */}
-        <div className="w-[267px] relative flex flex-col">
+        <div className="w-[267px] relative flex flex-col shrink-0">
           {/* Piano key bars */}
           <div className="absolute left-0 top-[50px] flex flex-col gap-[24px] z-10 pointer-events-none">
             <div className="bg-black h-[46px] w-[140px] rounded-tr-[4px] rounded-br-[4px] shadow-[2px_1px_1px_0px_rgba(0,0,0,0.1)]" />
@@ -531,18 +541,21 @@ export default function Calibration() {
 
           {/* Nav tabs — Calibration active */}
           <div className="flex flex-col">
-            <div className="border border-black h-[72px] flex items-center justify-end pr-[19px] pl-[100px] rounded-tr-[8px] bg-[#e7d0ff] relative shadow-[inset_0px_4px_0px_0px_rgba(255,255,255,0.25),inset_0px_-15px_17.6px_0px_rgba(53,21,21,0.07)]">
+            <div
+              aria-current="page"
+              className="border border-black h-[72px] flex items-center justify-end pr-[19px] pl-[100px] rounded-tr-[8px] bg-[#e7d0ff] relative shadow-[inset_0px_4px_0px_0px_rgba(255,255,255,0.25),inset_0px_-15px_17.6px_0px_rgba(53,21,21,0.07)]"
+            >
               <span className="text-[20px] text-black font-sans whitespace-nowrap">Calibration</span>
             </div>
             <Link
               href="/tutorial"
-              className="-mt-px border border-black h-[72px] flex items-center justify-end pr-[19px] pl-[100px] bg-[#fffdf7] relative shadow-[inset_0px_4px_0px_0px_rgba(255,255,255,0.25),inset_0px_-15px_17.6px_0px_rgba(53,21,21,0.07)]"
+              className="-mt-px border border-black h-[72px] flex items-center justify-end pr-[19px] pl-[100px] bg-[#fffdf7] relative shadow-[inset_0px_4px_0px_0px_rgba(255,255,255,0.25),inset_0px_-15px_17.6px_0px_rgba(53,21,21,0.07)] hover:bg-black/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-black/20"
             >
               <span className="text-[20px] text-black font-sans whitespace-nowrap">Tutorial</span>
             </Link>
             <Link
               href="/about"
-              className="-mt-px border border-black h-[72px] flex items-center justify-end pr-[19px] pl-[100px] rounded-br-[8px] bg-[#fffdf7] relative shadow-[inset_0px_4px_0px_0px_rgba(255,255,255,0.25),inset_0px_-15px_17.6px_0px_rgba(53,21,21,0.07)]"
+              className="-mt-px border border-black h-[72px] flex items-center justify-end pr-[19px] pl-[100px] rounded-br-[8px] bg-[#fffdf7] relative shadow-[inset_0px_4px_0px_0px_rgba(255,255,255,0.25),inset_0px_-15px_17.6px_0px_rgba(53,21,21,0.07)] hover:bg-black/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-black/20"
             >
               <span className="text-[20px] text-black font-sans whitespace-nowrap">About</span>
             </Link>
@@ -551,30 +564,30 @@ export default function Calibration() {
       </div>
 
       {/* Step content row */}
-      <div className="flex items-center gap-4 pl-[61px] pr-[47px] pt-[28px] pb-[16px]">
+      <div className="flex items-center gap-4 shrink-0 pl-[clamp(20px,4.2vw,61px)] pr-[clamp(12px,3.2vw,47px)] pt-[clamp(8px,2dvh,28px)] pb-[clamp(6px,1.5dvh,16px)]">
         {renderStepContent()}
       </div>
 
       {/* Bottom nav: Prev/Exit | progress bar | Next/Exit */}
-      <div className="flex items-center gap-6 pl-[56px] pr-[47px] pb-[30px]">
+      <div className="flex items-center gap-6 shrink-0 pl-[clamp(20px,3.8vw,56px)] pr-[clamp(12px,3.2vw,47px)] pb-[clamp(10px,2.5dvh,30px)]">
         {isComplete ? (
           <Link
             href="/"
-            className="shrink-0 border-[1.5px] border-black bg-[#fffdf7] px-6 py-3 rounded-[8px] text-[26px] text-black font-sans whitespace-nowrap hover:bg-black/5 transition-colors"
+            className="shrink-0 border-[1.5px] border-black bg-[#fffdf7] px-6 py-3 rounded-[8px] text-[26px] text-black font-sans whitespace-nowrap hover:bg-black/5 active:scale-[0.97] transition-[background-color,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/20 focus-visible:ring-offset-1"
           >
             Previous Step
           </Link>
         ) : step === 1 ? (
           <Link
             href="/"
-            className="shrink-0 border-[1.5px] border-black bg-[#fffdf7] px-6 py-3 rounded-[8px] text-[26px] text-black font-sans whitespace-nowrap hover:bg-black/5 transition-colors"
+            className="shrink-0 border-[1.5px] border-black bg-[#fffdf7] px-6 py-3 rounded-[8px] text-[26px] text-black font-sans whitespace-nowrap hover:bg-black/5 active:scale-[0.97] transition-[background-color,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/20 focus-visible:ring-offset-1"
           >
             Exit Calibration
           </Link>
         ) : (
           <button
             onClick={() => setStep(step - 1)}
-            className="shrink-0 border-[1.5px] border-black bg-[#fffdf7] px-6 py-3 rounded-[8px] text-[26px] text-black font-sans whitespace-nowrap hover:bg-black/5 transition-colors"
+            className="shrink-0 border-[1.5px] border-black bg-[#fffdf7] px-6 py-3 rounded-[8px] text-[26px] text-black font-sans whitespace-nowrap hover:bg-black/5 active:scale-[0.97] transition-[background-color,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/20 focus-visible:ring-offset-1"
           >
             Previous Step
           </button>
@@ -585,7 +598,7 @@ export default function Calibration() {
         {isComplete ? (
           <button
             onClick={handleComplete}
-            className="shrink-0 border-[1.5px] border-black bg-[#fffdf7] px-6 py-3 rounded-[8px] text-[26px] text-black font-sans whitespace-nowrap hover:bg-black/5 transition-colors"
+            className="shrink-0 border-[1.5px] border-black bg-[#fffdf7] px-6 py-3 rounded-[8px] text-[26px] text-black font-sans whitespace-nowrap hover:bg-black/5 active:scale-[0.97] transition-[background-color,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/20 focus-visible:ring-offset-1"
           >
             Exit
           </button>
@@ -593,8 +606,8 @@ export default function Calibration() {
           <button
             onClick={() => setStep(step + 1)}
             disabled={!canAdvance()}
-            className={`shrink-0 border-[1.5px] border-black bg-[#fffdf7] px-6 py-3 rounded-[8px] text-[26px] text-black font-sans whitespace-nowrap transition-colors ${
-              !canAdvance() ? "opacity-30 cursor-not-allowed" : "hover:bg-black/5"
+            className={`shrink-0 border-[1.5px] border-black bg-[#fffdf7] px-6 py-3 rounded-[8px] text-[26px] text-black font-sans whitespace-nowrap transition-[background-color,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/20 focus-visible:ring-offset-1 ${
+              !canAdvance() ? "opacity-30 cursor-not-allowed" : "hover:bg-black/5 active:scale-[0.97]"
             }`}
           >
             Next Step
