@@ -88,14 +88,18 @@ export default function Calibration() {
     }
   }, [stream]);
 
-  // Reset step-specific state when step changes
-  useEffect(() => {
+  function resetInteractiveStepState() {
     setCountdown(null);
     setHasStarted(false);
     setFingersShown(false);
     setShowingImage(false);
     setStep5Success(false);
-  }, [step]);
+  }
+
+  function goToAdjacentStep(delta: -1 | 1) {
+    resetInteractiveStepState();
+    setStep((s) => s + delta);
+  }
 
   // Close help modal on Escape
   useEffect(() => {
@@ -586,7 +590,7 @@ export default function Calibration() {
           </Link>
         ) : (
           <button
-            onClick={() => setStep(step - 1)}
+            onClick={() => goToAdjacentStep(-1)}
             className="shrink-0 border-[1.5px] border-black bg-[#fffdf7] px-6 py-3 rounded-[8px] text-[26px] text-black font-sans whitespace-nowrap hover:bg-black/5 active:scale-[0.97] transition-[background-color,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/20 focus-visible:ring-offset-1"
           >
             Previous Step
@@ -604,7 +608,7 @@ export default function Calibration() {
           </button>
         ) : (
           <button
-            onClick={() => setStep(step + 1)}
+            onClick={() => goToAdjacentStep(1)}
             disabled={!canAdvance()}
             className={`shrink-0 border-[1.5px] border-black bg-[#fffdf7] px-6 py-3 rounded-[8px] text-[26px] text-black font-sans whitespace-nowrap transition-[background-color,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/20 focus-visible:ring-offset-1 ${
               !canAdvance() ? "opacity-30 cursor-not-allowed" : "hover:bg-black/5 active:scale-[0.97]"
