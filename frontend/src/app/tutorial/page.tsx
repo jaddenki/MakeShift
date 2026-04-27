@@ -1,9 +1,18 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function Tutorial() {
   const router = useRouter();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") router.back();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [router]);
 
   const steps = [
     {
@@ -34,7 +43,6 @@ export default function Tutorial() {
   ];
 
   return (
-    /* Full-screen overlay */
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={() => router.back()}
@@ -50,19 +58,18 @@ export default function Tutorial() {
           <h1 className="text-[32px] font-sans font-medium text-black">Tutorial</h1>
           <button
             onClick={() => router.back()}
-            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-black/8 transition-colors text-[22px] text-black leading-none"
+            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-black/8 active:scale-[0.97] transition-[background-color,transform] text-[22px] text-black leading-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/20"
             aria-label="Close tutorial"
           >
             ×
           </button>
         </div>
 
-        <div className="overflow-y-auto px-8 pb-8" style={{ maxHeight: "calc(88vh - 80px)" }}>
+        <div className="overflow-y-auto overscroll-contain px-8 pb-8" style={{ maxHeight: "calc(88vh - 80px)" }}>
           {/* Video placeholder */}
           <div className="w-full aspect-video bg-black rounded-[10px] flex items-center justify-center mb-8">
             <div className="flex flex-col items-center gap-3 opacity-40">
-              {/* Play icon placeholder */}
-              <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg aria-hidden="true" width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="28" cy="28" r="26.5" stroke="white" strokeWidth="2" />
                 <path d="M22 20L38 28L22 36V20Z" fill="white" />
               </svg>
@@ -79,7 +86,7 @@ export default function Tutorial() {
                 </div>
                 <div>
                   <p className="text-black text-[18px] font-sans font-medium mb-[4px]">{s.title}</p>
-                  <p className="text-black/60 text-[15px] font-sans leading-relaxed">{s.body}</p>
+                  <p className="text-black/65 text-[15px] font-sans leading-relaxed">{s.body}</p>
                 </div>
               </div>
             ))}
@@ -88,8 +95,7 @@ export default function Tutorial() {
           {/* PDF download */}
           <div className="border border-[#d9d9d9] rounded-[10px] flex items-center justify-between px-6 py-4">
             <div className="flex items-center gap-3">
-              {/* PDF icon */}
-              <svg width="28" height="32" viewBox="0 0 28 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg aria-hidden="true" width="28" height="32" viewBox="0 0 28 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect x="0.75" y="0.75" width="26.5" height="30.5" rx="3.25" stroke="#1e1e1e" strokeWidth="1.5" />
                 <text x="4" y="22" fontSize="10" fontWeight="bold" fill="#1e1e1e" fontFamily="sans-serif">PDF</text>
               </svg>
@@ -101,7 +107,7 @@ export default function Tutorial() {
             <a
               href="/tutorial/makeshift-guide.pdf"
               download
-              className="border-[1.5px] border-black bg-[#fffdf7] px-5 py-2 rounded-[8px] text-[15px] text-black font-sans hover:bg-black/5 transition-colors"
+              className="border-[1.5px] border-black bg-[#fffdf7] px-5 py-2 rounded-[8px] text-[15px] text-black font-sans hover:bg-black/5 active:scale-[0.97] transition-[background-color,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/20 focus-visible:ring-offset-1"
             >
               Download
             </a>
