@@ -23,7 +23,7 @@ export default function Tutorial() {
     {
       step: "2",
       title: "Position your paper",
-      body: "Lay a sheet of paper flat on a surface directly in front of the webcam. Make sure the whole sheet is visible and well-lit — this is your virtual keyboard.",
+      body: "Lay a sheet of paper flat on a surface directly in front of the webcam. Make sure the whole sheet is visible and well-lit. This is your virtual keyboard.",
     },
     {
       step: "3",
