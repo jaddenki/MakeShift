@@ -212,6 +212,10 @@ export default function Calibration() {
 
   // Counting down right now?
   const isCounting = countdown !== null && countdown > 0;
+  const isInteractiveStep = step === 4 || step === 5;
+  const showPreviousStep = !isComplete && step > 1 && !isCounting;
+  const showExitCalibration = step === 1;
+  const showNextStep = !isComplete && (!isInteractiveStep || canAdvance());
 
   // ── Camera overlays per step ──────────────────────────────────────────────
   const renderCameraOverlay = () => {
@@ -286,7 +290,9 @@ export default function Calibration() {
             </div>
           )}
           {/* Help button */}
-          <button onClick={() => setShowHelpModal(true)} aria-label="Show help" className="absolute bottom-4 right-4 w-10 h-10 bg-white rounded-[6px] flex items-center justify-center text-black text-[18px] font-bold shadow hover:bg-gray-100 transition-colors">?</button>
+          {!isCounting && !fingersShown && (
+            <button onClick={() => setShowHelpModal(true)} aria-label="Show help" className="absolute bottom-4 right-4 w-10 h-10 bg-white rounded-[6px] flex items-center justify-center text-black text-[18px] font-bold shadow hover:bg-gray-100 transition-colors">?</button>
+          )}
         </div>
       );
     }
@@ -333,7 +339,9 @@ export default function Calibration() {
           )}
 
           {/* Help button */}
-          <button onClick={() => setShowHelpModal(true)} aria-label="Show help" className="absolute bottom-4 right-4 w-10 h-10 bg-white rounded-[6px] flex items-center justify-center text-black text-[18px] font-bold shadow hover:bg-gray-100 transition-colors">?</button>
+          {!isCounting && !step5Success && (
+            <button onClick={() => setShowHelpModal(true)} aria-label="Show help" className="absolute bottom-4 right-4 w-10 h-10 bg-white rounded-[6px] flex items-center justify-center text-black text-[18px] font-bold shadow hover:bg-gray-100 transition-colors">?</button>
+          )}
         </>
       );
     }
@@ -549,23 +557,21 @@ export default function Calibration() {
 
       {/* Bottom nav */}
       <div className="flex items-center gap-6 shrink-0 pl-[clamp(20px,3.8vw,56px)] pr-[clamp(12px,3.2vw,47px)] pb-[clamp(10px,2.5dvh,30px)]">
-        {isComplete ? (
-          <button onClick={() => goToAdjacentStep(-1)} className="shrink-0 border-[1.5px] border-black bg-[#fffdf7] px-6 py-3 rounded-[8px] text-[22px] text-black font-sans hover:bg-black/5 active:scale-[0.97] transition-[background-color,transform]">Previous Step</button>
-        ) : step === 1 ? (
+        {showExitCalibration ? (
           <Link href="/" className="shrink-0 border-[1.5px] border-black bg-[#fffdf7] px-6 py-3 rounded-[8px] text-[22px] text-black font-sans hover:bg-black/5 active:scale-[0.97] transition-[background-color,transform]">Exit Calibration</Link>
-        ) : (
+        ) : showPreviousStep ? (
           <button onClick={() => goToAdjacentStep(-1)} className="shrink-0 border-[1.5px] border-black bg-[#fffdf7] px-6 py-3 rounded-[8px] text-[22px] text-black font-sans hover:bg-black/5 active:scale-[0.97] transition-[background-color,transform]">Previous Step</button>
-        )}
+        ) : <div aria-hidden="true" />}
 
         <ProgressBar total={TOTAL_STEPS} current={isComplete ? TOTAL_STEPS : step} />
 
         {isComplete ? (
-          <button onClick={handleComplete} className="shrink-0 border-[1.5px] border-black bg-[#fffdf7] px-6 py-3 rounded-[8px] text-[22px] text-black font-sans hover:bg-black/5 active:scale-[0.97] transition-[background-color,transform]">Exit</button>
-        ) : (
-          <button onClick={() => goToAdjacentStep(1)} disabled={!canAdvance()} className={`shrink-0 border-[1.5px] border-black bg-[#fffdf7] px-6 py-3 rounded-[8px] text-[22px] text-black font-sans transition-[background-color,transform] ${!canAdvance() ? "opacity-30 cursor-not-allowed" : "hover:bg-black/5 active:scale-[0.97]"}`}>
+          <button onClick={handleComplete} className="shrink-0 border-[1.5px] border-black bg-[#fffdf7] px-6 py-3 rounded-[8px] text-[22px] text-black font-sans hover:bg-black/5 active:scale-[0.97] transition-[background-color,transform]">Start Playing</button>
+        ) : showNextStep ? (
+          <button onClick={() => goToAdjacentStep(1)} className="shrink-0 border-[1.5px] border-black bg-[#fffdf7] px-6 py-3 rounded-[8px] text-[22px] text-black font-sans transition-[background-color,transform] hover:bg-black/5 active:scale-[0.97]">
             Next Step
           </button>
-        )}
+        ) : <div aria-hidden="true" />}
       </div>
     </div>
   );
